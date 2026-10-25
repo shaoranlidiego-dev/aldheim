@@ -58,3 +58,10 @@ de `tools/build_warrior_frames.gd`. `Unit` reproduce `<estado>_<dirección>` sin
   detalle** (texturas, brillos de armadura, expresividad del rostro). Un artista de pixel art podría reemplazar la
   hoja y los retratos respetando las dimensiones y nombres de este documento.
 - Las espadas, escudos y efectos de las referencias no están dibujados todavía.
+
+## Retrato piloto v2 (trabajo en curso, no integrado)
+`docs/art/wip/warrior_portrait_pilot.png` (128×128, tres cuartos, 49 colores, alfa 0/255) se genera con
+`python3 tools/make_warrior_pilot.py`. Usa el motor de pintura `tools/warrior_art/painter.py` (relieve + luz cálida
+arriba-izquierda + rampas por material + hebras de pelo + rasgos del rostro dibujados a mano en plantillas).
+Los sprites y retratos del juego (`assets/`) **no** se reemplazaron: siguen siendo la versión anterior hasta que el
+piloto sea aprobado.
