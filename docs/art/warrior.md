@@ -84,3 +84,18 @@ de `tools/build_warrior_frames.gd`. `Unit` reproduce `<estado>_<dirección>` sin
 arriba-izquierda + rampas por material + hebras de pelo + rasgos del rostro dibujados a mano en plantillas).
 Los sprites y retratos del juego (`assets/`) **no** se reemplazaron: siguen siendo la versión anterior hasta que el
 piloto sea aprobado.
+
+## Prueba de sprites desde la referencia de cuatro vistas (no integrada)
+Referencia obligatoria del personaje jugable: `reference/warrior_reference_4views.jpg` (una pose por dirección). Prueba de
+viabilidad en `wip/sprite_ref4/` (script `tools/extract_warrior_sprites_ref.py`): `candidate_<dirección>.png`, 55×76 px,
+paleta compartida de 48 colores, alfa duro. Evidencia: `candidates_vs_reference.png` y `board_test_candidates_vs_current.png`
+(las candidatas sobre el tablero real a 720×1280, junto al sprite actual).
+
+**Resultado:** silueta, volumen del pelo con reflejos cobrizos, bufanda, capa con flor de lis, hombreras de acero, ribetes y botas
+doradas se reconocen claramente y se acercan mucho más a la referencia que el sprite chibi actual. Son una reducción automática
+del render, no pixel art dibujado: tienen algo de ruido (brillos sueltos), los ojos son pequeños y los matices de acero se
+simplifican.
+
+**Por qué no se integró:** la referencia contiene una sola pose por dirección. Integrarla en `idle_*`/`walk_*` sería reemplazar
+las animaciones por imágenes estáticas o inventar cuadros de caminata. Hacen falta cuadros reales de caminata (6 por dirección
+y 2 de reposo) en el mismo estilo para sustituir la hoja actual.
