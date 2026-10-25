@@ -3,8 +3,8 @@
 Referencias aprobadas: [`reference/warrior_reference.png`](reference/warrior_reference.png) (lámina inicial) y
 [`reference/warrior_reference_2.png`](reference/warrior_reference_2.png) (tablero + diálogo + retratos). Son láminas
 conceptuales: **no se importan en el juego** (`docs/` lleva `.gdignore` y se excluye del APK) ni se usan como
-spritesheet. Todo el arte jugable se genera con código propio (`tools/make_warrior_art.py`), sin imágenes de terceros
-y sin copiar píxeles de las referencias.
+spritesheet. Todo el arte jugable se genera con código propio (`tools/make_warrior_art.py`) para los **sprites**, sin copiar píxeles de las referencias. Los **retratos** sí se derivan de la
+referencia (ver más abajo).
 
 ## Rasgos
 Rol: tanque / daño físico. Pelo castaño desordenado con reflejos cobrizos, bufanda y capa azules, armadura oscura
@@ -15,18 +15,19 @@ Definida en `tools/warrior_art/palette.py` (piel, pelo, azules, aceros, cobre, d
 Todo el arte usa solo esos colores: sin degradados ni semitransparencias (el alfa es 0 o 255).
 
 ## Cómo se genera
-Formas a 8x (sprites) o 4x (retratos) → reducción por moda de color a píxeles nítidos → contorno de 1 px.
+Sprites: formas a 8x → reducción por moda de color a píxeles nítidos → contorno de 1 px.
 Luz arriba-izquierda: borde claro arriba-izq., borde oscuro abajo-der. y sombras recortadas dentro de cada pieza.
 La caminata sale de una pose parametrizada (balanceo de piernas y brazos, rebote del cuerpo, vaivén de capa y pelo).
 
 ```
-tools/make_warrior_art.py        punto de entrada (sprites y retratos)
+tools/make_warrior_art.py        punto de entrada de los sprites (y de los retratos procedurales antiguos)
 tools/warrior_art/raster.py      motor de dibujo y reducción a píxeles
 tools/warrior_art/palette.py     paleta
 tools/warrior_art/pose.py        poses de quieto y caminar (6 cuadros)
 tools/warrior_art/sprite_*.py    vistas frontal, trasera y lateral
 tools/warrior_art/sheet.py       ensambla la hoja
-tools/warrior_art/portrait.py    retratos y expresiones
+tools/warrior_art/portrait.py    retratos procedurales ANTIGUOS (archivados; ya no se usan en el juego)
+tools/extract_warrior_portraits.py  retratos actuales, extraídos de la referencia
 ```
 
 ## Sprites jugables (separados de los retratos)
@@ -37,15 +38,33 @@ Se muestran a escala x2 (88 px de cuadro; el personaje mide ~80 px de alto, igua
 Animaciones en `resources/characters/warrior/warrior_frames.tres`: `idle_<dir>` (2 fps) y `walk_<dir>` (12 fps).
 
 ## Retratos (separados de los sprites)
-`assets/characters/warrior/portraits/warrior_<expresión>.png`, **128×128**, fondo transparente, un archivo por
-expresión: neutral, sonriente, determinado, enojado, triste, sorprendido, herido, agotado. Aún **no se usan en el
-juego** (no hay sistema de diálogos); están listos para importarse como `Texture2D`.
+`assets/characters/warrior/portraits/warrior_<expresión>.png`: **128×128**, RGB opaco (fondo azul de la referencia),
+**64 colores** por imagen, sin tramado. Expresiones: neutral, sonriente, determinado, enojado, triste, sorprendido,
+herido y agotado. Aún **no se muestran en el juego** (no hay sistema de diálogos); están importados como `Texture2D`.
+
+**Procedencia:** se extraen de los ocho recuadros de la lámina aprobada `reference/warrior_reference_2.png` con
+`python3 tools/extract_warrior_portraits.py` (recorte de 146×146 px dentro del marco dorado, sin marco, sombra del marco ni
+etiqueta → reducción Lanczos a 128×128 → cuantización a 64 colores sin tramado). El script valida cada recorte (sin línea
+dorada de marco, sin fila oscura inferior, exactamente 64 colores) y `--install` copia el resultado a `assets/` archivando
+antes los anteriores en `archive/portraits_procedural_v1/`. La carpeta de trabajo es `wip/portraits_ref/`.
+
+**Qué se pierde:** reducción 146→128 px (error medio ≈2,4/255) y cuantización a 64 colores (error medio ≈3,9/255, ≈3 % de
+píxeles con diferencia visible): los degradados de piel y fondo pasan a escalones de tono y los brillos finos del pelo y el
+medallón se simplifican. La fuente no es una grilla de píxeles real: el resultado es una *ilustración pixelada*, no pixel art
+de píxeles contados a mano.
+
+**Derechos:** la lámina de referencia parece generada por IA y la titularidad de ese tipo de imágenes es incierta. Los retratos
+son una derivación directa de ella; conviene revisar su origen y licencia antes de publicar el juego.
+
+**Retratos procedurales anteriores:** archivados en `archive/portraits_procedural_v1/` (se pueden regenerar con
+`python3 tools/make_warrior_art.py portraits`, que ya no escribe en `assets/`). El retrato piloto de tres cuartos pintado
+con código (`wip/warrior_portrait_pilot*.png`) queda como estudio y no se usa.
 
 ## Estado por etapas
 | Etapa | Contenido | Estado |
 |---|---|---|
 | 1 | Quieto y caminar en 4 direcciones (6 cuadros) | **Implementado** |
-| 2 | Retratos con 8 expresiones | **Arte listo**, sin uso en el juego |
+| 2 | Retratos con 8 expresiones (extraídos de la referencia) | **Implementado en assets**, sin uso en el juego |
 | 3 | Correr, ataques (espada horizontal y ascendente) | Previsto |
 | 4 | Defensa, recibir daño, derrotado | Previsto |
 | 5 | Habilidad especial, celebrar, señalar, hablar | Previsto |

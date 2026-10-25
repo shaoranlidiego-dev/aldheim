@@ -33,10 +33,11 @@ scripts/board/board.gd        Tablero: dibujo de la grilla, terreno y conversió
 scripts/board/pathfinding.gd  Búsqueda de casillas alcanzables y caminos (BFS)
 scripts/units/unit.gd         Unidad: casilla actual, dirección y movimiento animado (el sprite solo es visual)
 assets/characters/warrior/sprites/   Hoja jugable del Guerrero (44x44 por cuadro)
-assets/characters/warrior/portraits/ Retratos de diálogo (128x128, uno por expresión)
+assets/characters/warrior/portraits/ Retratos de diálogo (128x128, 64 colores, uno por expresión)
 resources/characters/warrior/        warrior_frames.tres (SpriteFrames idle_/walk_ en 4 direcciones)
 docs/art/                            Documento de arte y referencias (no entran al juego)
-tools/make_warrior_art.py            Genera sprites y retratos (paquete tools/warrior_art/)
+tools/make_warrior_art.py            Genera la hoja de sprites (paquete tools/warrior_art/)
+tools/extract_warrior_portraits.py   Extrae los 8 retratos de la referencia (validación + --install)
 tools/build_warrior_frames.gd        Regenera warrior_frames.tres desde la hoja
 scripts/game/game.gd          Controlador: entrada táctil y flujo de selección/movimiento
 ```
@@ -126,9 +127,11 @@ como spritesheet. Documento de arte, paleta y plan de etapas: [`docs/art/warrior
 - **Sprites jugables** (`assets/characters/warrior/sprites/warrior_sheet.png`, cuadros de 44x44, 8 columnas x 4 filas):
   quieto (2 cuadros) y caminar (6 cuadros) en abajo, izquierda, derecha y arriba. Se animan con `AnimatedSprite2D` +
   `SpriteFrames` (`resources/characters/warrior/warrior_frames.tres`).
-- **Retratos** (`assets/characters/warrior/portraits/warrior_<expresión>.png`, 128x128): neutral, sonriente,
-  determinado, enojado, triste, sorprendido, herido y agotado. Archivos separados de los sprites; todavía no se usan
-  en el juego (no hay diálogos).
+- **Retratos** (`assets/characters/warrior/portraits/warrior_<expresión>.png`, 128x128, 64 colores, fondo azul opaco):
+  neutral, sonriente, determinado, enojado, triste, sorprendido, herido y agotado. Se extraen de la referencia aprobada
+  (`docs/art/reference/warrior_reference_2.png`) con `python3 tools/extract_warrior_portraits.py [--install]`. Son archivos
+  separados de los sprites y todavía no se muestran en el juego (no hay diálogos). Ver procedencia, pérdidas y aviso de derechos en
+  [`docs/art/warrior.md`](docs/art/warrior.md). Los retratos procedurales anteriores están en `docs/art/archive/`.
 - La lógica táctica usa únicamente `Unit.cell`; el sprite sigue a `position` y queda centrado en la casilla
   (cuadro x2, filtro *nearest*). Alcance (4 pasos), obstáculos y cálculo de caminos no cambiaron.
 - Un paso de caminata dura 0,25 s (`Unit.STEP_TIME`), para que 2 casillas equivalgan a un ciclo de 6 cuadros a 12 fps.
@@ -136,9 +139,9 @@ como spritesheet. Documento de arte, paleta y plan de etapas: [`docs/art/warrior
 
 ### Regenerar o reemplazar el arte
 
-1. Regenerar: `python3 tools/make_warrior_art.py` (requiere Pillow y numpy; `sprites` o `portraits` para uno solo).
+1. Sprites: `python3 tools/make_warrior_art.py` (requiere Pillow y numpy). Retratos: `python3 tools/extract_warrior_portraits.py --install`.
 2. Para usar arte propio, mantené el contrato: hoja de 8x4 cuadros de 44x44 (quieto x2, caminar x6; filas abajo,
-   izquierda, derecha, arriba) y retratos de 128x128 con los mismos nombres.
+   izquierda, derecha, arriba) y retratos de 128x128 con los mismos nombres (los retratos actuales vienen de la referencia).
 3. Abrí el proyecto una vez (o `godot --headless --import`) y regenerá los cuadros:
    `godot --headless --script res://tools/build_warrior_frames.gd`. También se puede editar `warrior_frames.tres` en el
    panel *SpriteFrames*. Mantené los nombres `idle_down|left|right|up` y `walk_down|left|right|up`.
@@ -151,4 +154,4 @@ como spritesheet. Documento de arte, paleta y plan de etapas: [`docs/art/warrior
 - [ ] En un camino con curvas cambia de dirección en cada giro.
 - [ ] Nunca pasa por las casillas oscuras y el alcance sigue siendo de 4 pasos.
 - [ ] Los píxeles se ven nítidos (sin suavizado) y el personaje (~80 px) llena la casilla sin cortarse.
-- [ ] Los retratos (carpeta `portraits/`) abren como imágenes nítidas de 128x128, con fondo transparente.
+- [ ] Los retratos (carpeta `portraits/`) abren como imágenes de 128x128 con fondo azul, sin restos de marco dorado ni franjas oscuras en los bordes.
