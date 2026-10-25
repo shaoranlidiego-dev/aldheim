@@ -3,20 +3,21 @@ extends SceneTree
 ## Uso (tras importar el proyecto una vez): godot --headless --script res://tools/build_warrior_frames.gd
 ## Volver a ejecutarlo cada vez que cambie la hoja warrior_sheet.png o la tabla ANIMATIONS.
 ##
-## Hoja actual: cuadros de 32x32, 4 columnas x 4 filas.
-##   Columnas: 0 quieto A, 1 quieto B, 2 paso A, 3 paso B
+## Hoja actual: cuadros de 44x44 (dibujo de 40 px + margen transparente de 2 px), 8 columnas x 4 filas.
+##   Columnas: 0-1 quieto (respiración), 2-7 caminar (6 cuadros)
 ##   Filas (RPG Maker): 0 abajo, 1 izquierda, 2 derecha, 3 arriba
+## Los retratos NO forman parte de esta hoja: son PNG sueltos en assets/characters/warrior/portraits/.
 
 const SHEET_PATH := "res://assets/characters/warrior/sprites/warrior_sheet.png"
 const OUTPUT_PATH := "res://resources/characters/warrior/warrior_frames.tres"
-const FRAME_SIZE := Vector2i(32, 32)
+const FRAME_SIZE := Vector2i(44, 44)
 const DIRECTIONS: Array[String] = ["down", "left", "right", "up"]  # fila = índice
 
 ## Animaciones implementadas: nombre base -> columnas de la hoja, fps y bucle.
 ## Cada una se crea como "<nombre>_<dirección>" (p. ej. walk_left).
 const ANIMATIONS := {
 	"idle": {"columns": [0, 1], "fps": 2.0, "loop": true},
-	"walk": {"columns": [2, 0, 3, 0], "fps": 8.0, "loop": true},
+	"walk": {"columns": [2, 3, 4, 5, 6, 7], "fps": 12.0, "loop": true},
 }
 ## Previstas, aún sin arte (ver docs/art/warrior.md): attack_1, attack_2, guard, hurt, defeated,
 ## run, special, celebrate, point, talk. Se agregan aquí cuando existan sus cuadros.

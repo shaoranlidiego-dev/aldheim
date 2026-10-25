@@ -5,7 +5,8 @@ extends Node2D
 
 signal move_finished
 
-const STEP_TIME := 0.15
+## Un paso de la animación de caminar (6 cuadros a 12 fps = 2 pasos por ciclo) dura 0.25 s.
+const STEP_TIME := 0.25
 
 @export var move_range := 4
 

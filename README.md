@@ -3,7 +3,7 @@
 RPG táctico 2D por turnos, vista cenital y tablero cuadriculado. Pensado primero para Android.
 Hecho con **Godot 4** y **GDScript**, sin complementos ni dependencias externas.
 
-> Estado: base técnica (v0.3). Hay tablero, el Guerrero en pixel art (quieto y caminar) y movimiento por casillas.
+> Estado: base técnica (v0.4). Hay tablero, el Guerrero en pixel art (quieto y caminar de 6 cuadros, más 8 retratos) y movimiento por casillas.
 > Todavía no hay combate, enemigos, personajes ni multijugador.
 
 ## Requisitos
@@ -32,12 +32,12 @@ scenes/main.tscn         Escena inicial: tablero, Guerrero e interfaz
 scripts/board/board.gd        Tablero: dibujo de la grilla, terreno y conversión píxel <-> casilla
 scripts/board/pathfinding.gd  Búsqueda de casillas alcanzables y caminos (BFS)
 scripts/units/unit.gd         Unidad: casilla actual, dirección y movimiento animado (el sprite solo es visual)
-assets/characters/warrior/sprites/warrior_sheet.png  Hoja del Guerrero (32x32 por cuadro)
-assets/characters/warrior/portraits/                  Retratos de diálogo (pendientes)
-resources/characters/warrior/warrior_frames.tres      SpriteFrames: idle_/walk_ en 4 direcciones
-docs/art/                                             Documento de arte y referencia (no entra al juego)
-tools/make_warrior_sheet.py                           Genera la hoja (arte original, Pillow)
-tools/build_warrior_frames.gd                         Regenera warrior_frames.tres desde la hoja
+assets/characters/warrior/sprites/   Hoja jugable del Guerrero (44x44 por cuadro)
+assets/characters/warrior/portraits/ Retratos de diálogo (128x128, uno por expresión)
+resources/characters/warrior/        warrior_frames.tres (SpriteFrames idle_/walk_ en 4 direcciones)
+docs/art/                            Documento de arte y referencias (no entran al juego)
+tools/make_warrior_art.py            Genera sprites y retratos (paquete tools/warrior_art/)
+tools/build_warrior_frames.gd        Regenera warrior_frames.tres desde la hoja
 scripts/game/game.gd          Controlador: entrada táctil y flujo de selección/movimiento
 ```
 
@@ -120,32 +120,35 @@ Desde PC con Android SDK y JDK 17+ también sirve: `godot --headless --export-de
 
 ## Personaje: el Guerrero
 
-El personaje jugable es el **Guerrero**, basado en la referencia aprobada (`docs/art/reference/warrior_reference.png`).
-Sus sprites se redibujan píxel a píxel (arte original, sin imágenes de terceros); la lámina **no** se usa como
-spritesheet. Detalles, paleta y plan de etapas: [`docs/art/warrior.md`](docs/art/warrior.md).
+Arte original del Guerrero basado en las referencias aprobadas (`docs/art/reference/`); las láminas **no** se usan
+como spritesheet. Documento de arte, paleta y plan de etapas: [`docs/art/warrior.md`](docs/art/warrior.md).
 
-**Implementado (etapa 1):** quieto (`idle_*`) y caminar (`walk_*`) en 4 direcciones, con un `AnimatedSprite2D` y un
-`SpriteFrames`. **Previsto, sin arte todavía:** correr, ataques, defensa, daño, derrotado, habilidad, gestos y
-retratos de diálogo (carpeta `assets/characters/warrior/portraits/`, vacía a propósito).
-
+- **Sprites jugables** (`assets/characters/warrior/sprites/warrior_sheet.png`, cuadros de 44x44, 8 columnas x 4 filas):
+  quieto (2 cuadros) y caminar (6 cuadros) en abajo, izquierda, derecha y arriba. Se animan con `AnimatedSprite2D` +
+  `SpriteFrames` (`resources/characters/warrior/warrior_frames.tres`).
+- **Retratos** (`assets/characters/warrior/portraits/warrior_<expresión>.png`, 128x128): neutral, sonriente,
+  determinado, enojado, triste, sorprendido, herido y agotado. Archivos separados de los sprites; todavía no se usan
+  en el juego (no hay diálogos).
 - La lógica táctica usa únicamente `Unit.cell`; el sprite sigue a `position` y queda centrado en la casilla
-  (cuadro de 32 px escalado x2 = 64 px dentro de casillas de 80 px, filtro *nearest*).
-- Al moverse se reproduce `walk_<dirección>` mirando hacia cada paso; al terminar, `idle_<dirección>`.
-- El alcance (4 pasos), los obstáculos y el cálculo de caminos no cambiaron.
+  (cuadro x2, filtro *nearest*). Alcance (4 pasos), obstáculos y cálculo de caminos no cambiaron.
+- Un paso de caminata dura 0,25 s (`Unit.STEP_TIME`), para que 2 casillas equivalgan a un ciclo de 6 cuadros a 12 fps.
+- **Previsto, sin arte todavía:** correr, ataques, defensa, daño, derrotado, habilidad y gestos.
 
 ### Regenerar o reemplazar el arte
 
-1. Editar/ejecutar `python3 tools/make_warrior_sheet.py` (Pillow) o reemplazar `warrior_sheet.png` por arte propio
-   con el mismo contrato: 4 columnas (quieto A, quieto B, paso A, paso B) x 4 filas (abajo, izquierda, derecha, arriba), cuadros de 32x32.
-2. Abrir el proyecto una vez (o `godot --headless --import`) y regenerar los cuadros:
-   `godot --headless --script res://tools/build_warrior_frames.gd`. Alternativa: editar `warrior_frames.tres` en el panel *SpriteFrames*.
-3. Mantener los nombres `idle_down|left|right|up` y `walk_down|left|right|up`.
+1. Regenerar: `python3 tools/make_warrior_art.py` (requiere Pillow y numpy; `sprites` o `portraits` para uno solo).
+2. Para usar arte propio, mantené el contrato: hoja de 8x4 cuadros de 44x44 (quieto x2, caminar x6; filas abajo,
+   izquierda, derecha, arriba) y retratos de 128x128 con los mismos nombres.
+3. Abrí el proyecto una vez (o `godot --headless --import`) y regenerá los cuadros:
+   `godot --headless --script res://tools/build_warrior_frames.gd`. También se puede editar `warrior_frames.tres` en el
+   panel *SpriteFrames*. Mantené los nombres `idle_down|left|right|up` y `walk_down|left|right|up`.
 
 ### Verificación del personaje
 
 - [ ] El Guerrero aparece centrado en la casilla (1, 1) de frente, sin rastro de la ficha circular.
-- [ ] Al caminar a la derecha, izquierda, arriba y abajo mira hacia esa dirección y alterna cuadros.
+- [ ] Al caminar a la derecha, izquierda, arriba y abajo mira hacia esa dirección y la caminata se ve fluida (piernas, brazos, capa).
 - [ ] Al llegar queda quieto (respira levemente) mirando hacia donde caminó por última vez.
 - [ ] En un camino con curvas cambia de dirección en cada giro.
 - [ ] Nunca pasa por las casillas oscuras y el alcance sigue siendo de 4 pasos.
-- [ ] Los píxeles se ven nítidos (sin suavizado) y el tamaño es cómodo para tocar la casilla en el celular.
+- [ ] Los píxeles se ven nítidos (sin suavizado) y el personaje (~80 px) llena la casilla sin cortarse.
+- [ ] Los retratos (carpeta `portraits/`) abren como imágenes nítidas de 128x128, con fondo transparente.

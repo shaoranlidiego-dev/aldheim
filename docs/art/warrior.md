@@ -1,52 +1,60 @@
 # Guerrero — documento de arte
 
-Referencia aprobada: [`reference/warrior_reference.png`](reference/warrior_reference.png).
-Es una lámina conceptual: **no se usa como spritesheet** ni se importa en el juego (`docs/` lleva `.gdignore` y
-se excluye del APK). Los sprites jugables se redibujan píxel a píxel con `tools/make_warrior_sheet.py`
-(arte original del proyecto, sin imágenes de terceros).
+Referencias aprobadas: [`reference/warrior_reference.png`](reference/warrior_reference.png) (lámina inicial) y
+[`reference/warrior_reference_2.png`](reference/warrior_reference_2.png) (tablero + diálogo + retratos). Son láminas
+conceptuales: **no se importan en el juego** (`docs/` lleva `.gdignore` y se excluye del APK) ni se usan como
+spritesheet. Todo el arte jugable se genera con código propio (`tools/make_warrior_art.py`), sin imágenes de terceros
+y sin copiar píxeles de las referencias.
 
-## Rasgos del personaje
-Rol: tanque / daño físico. Espada y armadura pesada. Cabeza grande (estilo chibi), pelo castaño desordenado,
-bufanda y capa azules con emblema dorado en la espalda, armadura de acero oscuro con hombreras y bordes dorados,
-pantalón pizarra y botas marrones.
+## Rasgos
+Rol: tanque / daño físico. Pelo castaño desordenado con reflejos cobrizos, bufanda y capa azules, armadura oscura
+con acero y cobre, emblema dorado (flor de lis) en la capa, botas de cuero.
 
-## Paleta (tomada de la lámina)
-| Uso | Color |
-|---|---|
-| Piel / sombra | `#fdc9a1` / `#efac7f` |
-| Rojo (gema) | `#ae252a` |
-| Azul capa / sombras | `#4b86cb` / `#2f5ca0` / `#1f3e75` |
-| Acero | `#4d5667` (base), `#8a96ab`, `#cfd6e2` |
-| Pizarra (pantalón) | `#494764`, `#2e2d42` |
-| Dorado | `#e3ad5e` |
-| Contorno | `#14161f` |
+## Paleta cerrada
+Definida en `tools/warrior_art/palette.py` (piel, pelo, azules, aceros, cobre, dorado, cuero, contorno `#12141d`).
+Todo el arte usa solo esos colores: sin degradados ni semitransparencias (el alfa es 0 o 255).
 
-## Contrato de la hoja jugable
-`assets/characters/warrior/sprites/warrior_sheet.png`: cuadros de **32×32**, fondo transparente, contorno de 1 px,
-ocupa ~28 px de alto centrado en el cuadro (se escala x2 = 64 px en casillas de 80 px, filtro *nearest*).
+## Cómo se genera
+Formas a 8x (sprites) o 4x (retratos) → reducción por moda de color a píxeles nítidos → contorno de 1 px.
+Luz arriba-izquierda: borde claro arriba-izq., borde oscuro abajo-der. y sombras recortadas dentro de cada pieza.
+La caminata sale de una pose parametrizada (balanceo de piernas y brazos, rebote del cuerpo, vaivén de capa y pelo).
 
-| | Col 0 | Col 1 | Col 2 | Col 3 |
-|---|---|---|---|---|
-| Uso | quieto A | quieto B (respiración) | paso A | paso B |
+```
+tools/make_warrior_art.py        punto de entrada (sprites y retratos)
+tools/warrior_art/raster.py      motor de dibujo y reducción a píxeles
+tools/warrior_art/palette.py     paleta
+tools/warrior_art/pose.py        poses de quieto y caminar (6 cuadros)
+tools/warrior_art/sprite_*.py    vistas frontal, trasera y lateral
+tools/warrior_art/sheet.py       ensambla la hoja
+tools/warrior_art/portrait.py    retratos y expresiones
+```
 
-Filas (orden RPG Maker): 0 abajo, 1 izquierda, 2 derecha (espejo de izquierda), 3 arriba.
-Animaciones en `resources/characters/warrior/warrior_frames.tres` (generado por `tools/build_warrior_frames.gd`):
-`idle_<dir>` (2 cuadros, 2 fps) y `walk_<dir>` (paso A, quieto, paso B, quieto; 8 fps).
+## Sprites jugables (separados de los retratos)
+`assets/characters/warrior/sprites/warrior_sheet.png`: **352×176**, cuadros de **44×44** (40 px de dibujo + 2 px de
+margen transparente por lado, así ningún contorno toca el borde), 8 columnas × 4 filas.
+Columnas: 0-1 quieto (respiración), 2-7 caminar (6 cuadros). Filas: abajo, izquierda, derecha (espejo), arriba.
+Se muestran a escala x2 (88 px de cuadro; el personaje mide ~80 px de alto, igual que la casilla), filtro *nearest*.
+Animaciones en `resources/characters/warrior/warrior_frames.tres`: `idle_<dir>` (2 fps) y `walk_<dir>` (12 fps).
+
+## Retratos (separados de los sprites)
+`assets/characters/warrior/portraits/warrior_<expresión>.png`, **128×128**, fondo transparente, un archivo por
+expresión: neutral, sonriente, determinado, enojado, triste, sorprendido, herido, agotado. Aún **no se usan en el
+juego** (no hay sistema de diálogos); están listos para importarse como `Texture2D`.
 
 ## Estado por etapas
 | Etapa | Contenido | Estado |
 |---|---|---|
-| 1 | Quieto y caminar en 4 direcciones | **Implementado** (v0.3) |
-| 2 | Correr, quieto/espera extendido | Previsto |
-| 3 | Ataque 1 (espada horizontal), Ataque 2 (golpe ascendente) | Previsto |
-| 4 | Defensa (guardia), recibir daño, derrotado | Previsto |
-| 5 | Habilidad especial (aura de fuerza), celebrar, señalar, hablar | Previsto |
-| 6 | Retratos de diálogo | Previsto |
+| 1 | Quieto y caminar en 4 direcciones (6 cuadros) | **Implementado** |
+| 2 | Retratos con 8 expresiones | **Arte listo**, sin uso en el juego |
+| 3 | Correr, ataques (espada horizontal y ascendente) | Previsto |
+| 4 | Defensa, recibir daño, derrotado | Previsto |
+| 5 | Habilidad especial, celebrar, señalar, hablar | Previsto |
 
-Cada etapa nueva = filas/hojas nuevas en `assets/characters/warrior/sprites/` + una entrada en la tabla `ANIMATIONS`
-de `tools/build_warrior_frames.gd`. El código de `Unit` reproduce `<estado>_<dirección>` sin cambios.
+Cada etapa nueva = más filas/hojas en `assets/characters/warrior/sprites/` y una entrada en la tabla `ANIMATIONS`
+de `tools/build_warrior_frames.gd`. `Unit` reproduce `<estado>_<dirección>` sin cambios.
 
-## Retratos (separados del sprite jugable)
-Viven en `assets/characters/warrior/portraits/`, un PNG por expresión, fuera de la hoja del sprite.
-Previstos: neutral, sonriente, decidido, enojado, triste, sorprendido, dolorido, concentrado, hablando.
-**Todavía no existen**: no se generaron para no entregar un arte que no se pueda verificar a este nivel.
+## Limitaciones conocidas
+- Es arte procedural: reproduce el diseño, la paleta y el espíritu de la referencia, pero **no iguala su nivel de
+  detalle** (texturas, brillos de armadura, expresividad del rostro). Un artista de pixel art podría reemplazar la
+  hoja y los retratos respetando las dimensiones y nombres de este documento.
+- Las espadas, escudos y efectos de las referencias no están dibujados todavía.
