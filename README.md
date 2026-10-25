@@ -3,7 +3,7 @@
 RPG táctico 2D por turnos, vista cenital y tablero cuadriculado. Pensado primero para Android.
 Hecho con **Godot 4** y **GDScript**, sin complementos ni dependencias externas.
 
-> Estado: base técnica (v0.1). Hay tablero, una ficha y movimiento por casillas.
+> Estado: base técnica (v0.2). Hay tablero, un personaje en pixel art (provisional) y movimiento por casillas.
 > Todavía no hay combate, enemigos, personajes ni multijugador.
 
 ## Requisitos
@@ -18,7 +18,7 @@ Hecho con **Godot 4** y **GDScript**, sin complementos ni dependencias externas.
 
 ## Cómo se juega
 
-1. Tocá (o hacé clic en) la ficha amarilla: se marcan en azul las casillas alcanzables (4 pasos, sin atravesar obstáculos).
+1. Tocá (o hacé clic en) el personaje: se marcan en azul las casillas alcanzables (4 pasos, sin atravesar obstáculos).
 2. Tocá una casilla azul: la ficha camina hasta ahí.
 3. Tocá cualquier otro lugar para cancelar la selección.
 
@@ -31,7 +31,11 @@ project.godot            Configuración (pantalla vertical 720x1280, escena prin
 scenes/main.tscn         Escena inicial: tablero, ficha e interfaz
 scripts/board/board.gd        Tablero: dibujo de la grilla, terreno y conversión píxel <-> casilla
 scripts/board/pathfinding.gd  Búsqueda de casillas alcanzables y caminos (BFS)
-scripts/units/unit.gd         Ficha: casilla actual y movimiento animado
+scripts/units/unit.gd         Unidad: casilla actual, dirección y movimiento animado (el sprite solo es visual)
+assets/characters/hero_sheet.png        Hoja de sprites PROVISIONAL del héroe (16x16 por cuadro)
+resources/characters/hero_frames.tres   SpriteFrames con las animaciones idle_/walk_ en 4 direcciones
+tools/make_hero_sheet.py                Genera la hoja provisional (arte original, Pillow)
+tools/build_hero_frames.gd              Regenera hero_frames.tres a partir de la hoja
 scripts/game/game.gd          Controlador: entrada táctil y flujo de selección/movimiento
 ```
 
@@ -63,7 +67,7 @@ Marcá cada punto al probar en el editor (F5) y luego en un dispositivo Android.
 - [ ] La grilla no se corta ni se superpone con el texto en la parte superior.
 
 **Movimiento**
-- [ ] La ficha amarilla empieza en la casilla (1, 1).
+- [ ] El personaje empieza en la casilla (1, 1).
 - [ ] Tocar la ficha marca en azul las casillas alcanzables (máximo 4 pasos, 23 desde el inicio).
 - [ ] Tocar la ficha otra vez, o tocar fuera de lo azul, quita la selección.
 - [ ] Tocar una casilla azul mueve la ficha paso a paso, rodeando los obstáculos.
@@ -111,3 +115,35 @@ Si la exportación pide un *keystore de depuración*, avisá con el texto exacto
 genera con `keytool` y se indica en *Editor > Configuración del editor > Export > Android*.
 
 Desde PC con Android SDK y JDK 17+ también sirve: `godot --headless --export-debug "Android (depuración)" build/aldheim-debug.apk`.
+
+## Personaje (arte provisional)
+
+La ficha circular fue reemplazada por un héroe de pixel art, vista cenital estilo RPG Maker, con un nodo
+`AnimatedSprite2D` hijo de `Player` y un recurso `SpriteFrames`. **El dibujo es provisional**: lo generó
+`tools/make_hero_sheet.py`, es arte original del proyecto (sin imágenes de terceros) y solo sirve para validar el
+movimiento. No es el diseño final.
+
+- La lógica táctica usa únicamente `Unit.cell`; el sprite sigue a `position` y queda centrado en la casilla
+  (cuadro de 16 px escalado x4 = 64 px dentro de casillas de 80 px, filtro *nearest*).
+- Al moverse se reproduce `walk_<dirección>` mirando hacia cada paso; al terminar, `idle_<dirección>`.
+- El alcance (4 pasos), los obstáculos y el cálculo de caminos no cambiaron.
+
+### Cómo sustituirlo por sprites definitivos
+
+1. Dibujá una hoja PNG con cuadros del mismo tamaño y este orden: **3 columnas** (paso A, quieto, paso B) y
+   **4 filas** (abajo, izquierda, derecha, arriba), como en RPG Maker. Guardala en
+   `assets/characters/hero_sheet.png` (Godot la importa con filtro *nearest*).
+2. Si el tamaño de cuadro no es 16x16, cambiá `FRAME_SIZE` en `tools/build_hero_frames.gd` y la escala del nodo
+   `Sprite` en `scenes/main.tscn` para que mida cerca de 64 px.
+3. Regenerá los cuadros: `godot --headless --script res://tools/build_hero_frames.gd` (después de abrir/importar
+   el proyecto una vez). Alternativa: editar `hero_frames.tres` desde el panel *SpriteFrames* del editor.
+4. Los nombres de animación deben mantenerse: `idle_down|left|right|up` y `walk_down|left|right|up`.
+
+### Verificación del personaje
+
+- [ ] El héroe aparece centrado en la casilla (1, 1) mirando hacia abajo, sin rastro de la ficha amarilla.
+- [ ] Al caminar a la derecha, izquierda, arriba y abajo, el sprite mira hacia esa dirección y alterna cuadros.
+- [ ] Al llegar queda quieto, mirando hacia donde caminó por última vez.
+- [ ] En un camino con curvas cambia de dirección en cada giro.
+- [ ] El héroe nunca pasa por las casillas oscuras y el alcance sigue siendo de 4 pasos.
+- [ ] Los píxeles se ven nítidos (sin suavizado) en el celular.
