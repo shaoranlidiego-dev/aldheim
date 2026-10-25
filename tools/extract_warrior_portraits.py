@@ -2,8 +2,8 @@
 """Extrae retratos del Guerrero desde la lámina de referencia (docs/art/reference/warrior_reference_2.png).
 
 FASE 1A (piloto): solo el retrato "neutral". Salida en docs/art/wip/; no toca assets/ ni el juego.
-Pasos: recorte cuadrado dentro del marco dorado (sin marco ni etiqueta) -> reducción a 128x128 por interpolación
-Lanczos -> cuantización a una paleta limitada, sin tramado. El fondo azul se conserva opaco.
+Pasos: recorte cuadrado dentro del marco dorado (sin marco, sombra del marco ni etiqueta) -> reducción a 128x128 por
+interpolación Lanczos -> cuantización a 64 colores, sin tramado. El fondo azul se conserva opaco.
 
 Uso: python3 tools/extract_warrior_portraits.py   (requiere Pillow y numpy)
 """
@@ -17,10 +17,11 @@ REF = ROOT / "docs" / "art" / "reference" / "warrior_reference_2.png"
 OUT = ROOT / "docs" / "art" / "wip"
 
 # Coordenadas dentro de la lámina (x, y, lado). Marco dorado del neutral: x 798-799 y 956, y 56-57 y 208.
-# Se recortan 148x148 px bien dentro del marco (1-4 px de margen) para no arrastrar píxeles dorados.
-TILES = {"neutral": (804, 59, 148)}
+# Se recortan 146x146 px bien dentro del marco. Las filas 205-206 son sombra del marco (luminancia 53 y 23 frente a ~62),
+# por eso el recorte termina en la fila 204.
+TILES = {"neutral": (805, 59, 146)}
 SIZE = 128
-PALETTE_SIZES = (32, 48, 64)
+PALETTE_SIZES = (64,)  # aprobado: 64 colores
 
 
 def crop_tile(ref: Image.Image, name: str) -> Image.Image:
@@ -60,7 +61,7 @@ def main() -> None:
 	tile = crop_tile(ref, "neutral")
 	small = downscale(tile)
 	variants = {n: quantize(small, n) for n in PALETTE_SIZES}
-	chosen = variants[48]
+	chosen = variants[64]
 	chosen.save(OUT / "warrior_portrait_neutral_ref_pilot_128.png")
 
 	# Pérdida por reducción: volver a ampliar a 148 y comparar con el recorte original.
@@ -68,7 +69,7 @@ def main() -> None:
 	r_psnr, r_mae, r_bad, _ = psnr_mae(tile, back)
 	print(f"Recorte original {tile.size}: {color_count(tile)} colores, nitidez {sharpness(tile):.2f}")
 	print(f"Reducido a {small.size}: {color_count(small)} colores, nitidez {sharpness(small):.2f}")
-	print(f"  pérdida por reducción (148->128->148): PSNR {r_psnr:.1f} dB, error medio {r_mae:.2f}/255, píxeles con error>24: {r_bad:.1f}%")
+	print(f"  pérdida por reducción (146->128->146): PSNR {r_psnr:.1f} dB, error medio {r_mae:.2f}/255, píxeles con error>24: {r_bad:.1f}%")
 	for n, q in variants.items():
 		p, m, bad, mx = psnr_mae(small, q)
 		print(f"  cuantizado a {n} colores (reales: {color_count(q)}): PSNR {p:.1f} dB, error medio {m:.2f}/255, "
@@ -89,15 +90,6 @@ def main() -> None:
 		board.paste(t, (x, 10))
 		x += t.width + 10
 	board.save(OUT / "warrior_portrait_neutral_ref_pilot_compare.png")
-
-	# Variantes de paleta lado a lado (x5).
-	row = [variants[n].resize((SIZE * 5, SIZE * 5), Image.NEAREST) for n in PALETTE_SIZES]
-	pal = Image.new("RGB", (sum(t.width for t in row) + 40, row[0].height + 20), (14, 18, 28))
-	x = 10
-	for t in row:
-		pal.paste(t, (x, 10))
-		x += t.width + 10
-	pal.save(OUT / "warrior_portrait_neutral_ref_pilot_palettes.png")
 
 
 if __name__ == "__main__":
