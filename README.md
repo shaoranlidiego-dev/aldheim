@@ -78,3 +78,15 @@ Marcá cada punto al probar en el editor (F5) y luego en un dispositivo Android.
 - [ ] Al volver a la app desde segundo plano, el estado sigue correcto.
 
 **Nota para ejecución por línea de comandos**: la primera vez, abrí el proyecto en el editor (o ejecutá `godot --headless --import`) para generar la caché de `class_name`; sin ella, scripts como `Board` o `Unit` no se resuelven.
+
+## Probar en el editor: botón "Input" de la barra flotante
+
+Desde Godot 4.4, al ejecutar con el juego incrustado o con el espacio de trabajo *Game* flotante, la barra
+tiene modos de entrada. Solo el modo **Input** ("Allow game input") envía clics y toques al juego; los modos
+de selección 2D/3D desactivan la entrada del juego para seleccionar nodos o mover la cámara del editor.
+Si el modo activo no es *Input*, tocar la ficha no hace nada, pero eso es del editor, no del proyecto.
+
+Para no depender de la barra:
+- Dejá activado el modo **Input** durante la prueba; o
+- Desactivá la incrustación (*Ajustes del editor > Run > Window Placement* o la opción *Embed Game* del espacio *Game*) para que el juego abra su propia ventana; o
+- Exportá e instalá en el celular (*Despliegue con un clic*): ahí no interviene el editor.
