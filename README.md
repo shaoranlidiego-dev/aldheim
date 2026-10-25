@@ -90,3 +90,24 @@ Para no depender de la barra:
 - Dejá activado el modo **Input** durante la prueba; o
 - Desactivá la incrustación (*Ajustes del editor > Run > Window Placement* o la opción *Embed Game* del espacio *Game*) para que el juego abra su propia ventana; o
 - Exportá e instalá en el celular (*Despliegue con un clic*): ahí no interviene el editor.
+
+## Generar un APK de depuración desde el propio Android (sin PC)
+
+El repositorio incluye `export_presets.cfg` con el preset **Android (depuración)**: APK sin Gradle, solo
+`arm64-v8a`, paquete `com.aldheim.reinoolvidado`. No contiene claves ni contraseñas.
+
+1. Instalá el **editor oficial de Godot 4.7.2 para Android** (APK `Godot_v4.7.2-stable_android_editor.apk` en
+   <https://github.com/godotengine/godot/releases/tag/4.7.2-stable>, o desde godotengine.org/download/android).
+   Permití "instalar apps desconocidas" para el navegador o gestor de archivos que uses.
+2. Descargá el proyecto como ZIP desde GitHub (rama `claude/aldheim-tactical-rpg-base-xavwgc`) y descomprimilo
+   en una carpeta accesible (por ejemplo *Documentos/aldheim*).
+3. En Godot: **Importar** y elegí `project.godot`. Abrilo.
+4. Menú **Editor > Administrar plantillas de exportación > Descargar e instalar** (necesita internet, ~1 GB).
+5. Menú **Proyecto > Exportar**. Debe aparecer *Android (depuración)*. Tocá **Exportar proyecto**, dejá
+   marcada la opción de depuración, elegí una carpeta (por ejemplo *Descargas*) y guardá `aldheim-debug.apk`.
+6. Abrí el APK desde el gestor de archivos, aceptá la instalación y abrí **Aldheim**.
+
+Si la exportación pide un *keystore de depuración*, avisá con el texto exacto del mensaje: en Godot de escritorio se
+genera con `keytool` y se indica en *Editor > Configuración del editor > Export > Android*.
+
+Desde PC con Android SDK y JDK 17+ también sirve: `godot --headless --export-debug "Android (depuración)" build/aldheim-debug.apk`.
